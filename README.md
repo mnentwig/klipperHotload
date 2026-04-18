@@ -66,7 +66,7 @@ The intention behind the default mechanisms is to keep G-code concise in long li
 
 ### Storage
 A single dictionary is provided to all function calls for data storage, regardless of file. It persists across recompilation of user code. Restarting Klipper clears it. 
-User code is responsible for avoiding name clashes between functions e.g. by using uniquely named fields.
+User code is responsible for avoiding name clashes between functions e.g. by using uniquely named fields (see `myOwnData` field in example).
 
 Storage can be reset with the ```CLEAR=1``` argument in combination with a function call, which also forces recompilation of the function's source file (clearing e.g. global variables in the file's name space)
 
