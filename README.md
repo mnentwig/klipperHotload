@@ -5,7 +5,7 @@ Convenient use of Python in Klipper GCODE with runtime recompile
 Writing user Python modules for Klipper tends to be clumsy, as any change requires restarting Klipper with rehoming etc.
 
 ### Enter KlipperHotload
-The package provides a single Klipper macro ```U``` that executes user Python code, hotloading as needed.
+The package provides a single Klipper macro ```U``` that executes user Python code, re-compiling source code if changed.
 
 ### User function example
 ```python
@@ -75,4 +75,4 @@ The dictionary permits dot notation for dictionary access as shorthand.
 ### Installation
 - run klipperHotload/install.sh
 - add [klipper_hotload] to e.g. printer.cfg
-- Run `U` from the command line. The error message shows the default file location. Copy above example there into my_fun.py.
+- Run `U` from the Klipper command line. The error message shows the default file location. Copy above example there into my_fun.py.
