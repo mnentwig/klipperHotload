@@ -75,3 +75,4 @@ The dictionary permits dot notation for dictionary access as shorthand.
 ### Installation
 - run klipperHotload/install.sh
 - add [klipper_hotload] to e.g. printer.cfg
+- Run `U` from the command line. The error message shows the default file location. Copy above example there into my_fun.py.
