@@ -79,5 +79,15 @@ Storage can be reset with the ```CLEAR=1``` argument in combination with a funct
 
 The dictionary permits dot notation for dictionary access as shorthand.
 
+### convenience functions
+The following convenience functions can be called on the user function argument (redundant, as user code could implement the same starting from `self.printer`)
+```python
+self.log("info message")
+self.logRaw("raw message (no // prefix)")
+self.logE("error message, usually shows in red")
+self.G("G0 X100 Y100") # GCODE (does not wait for completion)
+self.respCmd("action:prompt_begin Hello World"): # RESPOND with TYPE=command
+```
+
 ### Running tests
 Copy contents of `klipper/extras/klipper_hotload_demotest/demotest.gcode` into the Klipper console.

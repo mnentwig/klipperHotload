@@ -49,7 +49,7 @@ class klipper_hotload:
         self.myFunDict = attrDict() # dict with dot access
         self.myFunDict.printer = self.printer
         self.myFunDict.gcode = self.gcode
-        self.myFunDict.hello = self            
+        self.myFunDict.klipper_hotload = self            
         def log(txt): # closure captures "self"
             self.log(txt)
         def logRaw(txt): # closure captures "self"
@@ -58,11 +58,14 @@ class klipper_hotload:
             self.G("RESPOND TYPE=error MSG='"+str(txt)+"'")
         def G(txt, waitForCompletion=False): # closure captures "self"
             self.G(txt, waitForCompletion)
+        def respCmd(txt): # closure captures "self"
+            self.G("RESPOND TYPE=command MSG='"+str(txt)+"'")
             
         self.myFunDict.log = log
         self.myFunDict.logRaw = logRaw
         self.myFunDict.logE = logE        
         self.myFunDict.G = G        
+        self.myFunDict.respCmd = respCmd
 
     def _U_inner(self, canonicalFilePath, FUN, gcmd):
         # === change detection ===
