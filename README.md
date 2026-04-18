@@ -60,7 +60,7 @@ calls `fun3` from `someOtherFile.py` located at `/home/myself` and updates defau
 `{HOME}` interpolates to the user's home directory, `CONFIG` to the directory holding printer.cfg, `{TEMP}` to the system temp directory, 
 
 ### PATH and FILE resolution
-`FILE` may optionally include an absolute or relative file component. It updates the default for `FILE` (not `PATH`). 
+`FILE` may optionally include an absolute or relative file component. It updates the default for `FILE` (not `PATH`). If absolute, `PATH` is disregarded. 
 A typical use case is setting `PATH` only once to a user folder, then relying on the `PATH` default and navigating subfolders with `FILE=/a/b/c/d.py`. 
 The intention behind the default mechanisms is to keep G-code concise in long lists of function calls that typically call functions from the same file or even the same function with changing arguments.
 
