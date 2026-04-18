@@ -26,6 +26,7 @@ class klipper_hotload:
         self.constCONFIG = os.path.dirname(config_file)
         self.constHOME = Path.home()
         self.constTEMP = tempfile.gettempdir()
+        self.constEXTRAS = Path(__file__).resolve().parent # this file is supposed to be loaded from klipper/klippy/extras
 
         self.lastFile = "my_fun.py"
         self.lastPath = self.constCONFIG
@@ -44,7 +45,8 @@ class klipper_hotload:
         self.myFunDict.hello = self            
         # closure on self to allow userDict.log() syntax
         def log(txt):
-            self.G("RESPOND TYPE=echo MSG='"+str(txt)+"'")
+            self.log(txt) # closure captures "self"
+            #self.G("RESPOND TYPE=echo MSG='"+str(txt)+"'")
         def logE(txt):
             self.G("RESPOND TYPE=error MSG='"+str(txt)+"'")
         self.myFunDict.log = log
@@ -96,23 +98,29 @@ class klipper_hotload:
         return 1 # success
     
     def _subst(self, arg):
-        return arg.format(CONFIG=self.constCONFIG, HOME=self.constHOME, TEMP=self.constTEMP)
+        '''replaces {VAR} in an input file or path'''
+        return arg.format(CONFIG=self.constCONFIG, HOME=self.constHOME, TEMP=self.constTEMP, EXTRAS=self.constEXTRAS)
 
     def cmd_U(self, gcmd):        
+        '''response to this package's GCODE 'U' command'''
         FILE = gcmd.get("FILE", default=self.lastFile)
         PATH = gcmd.get("PATH", default=None) # deferred: self.lastPath
         FUN = gcmd.get("FUN", default=self.lastFun)
         CLEAR = gcmd.get_int("CLEAR", default=0)
 
-        FILE = self._subst(FILE)
+        FILE = self._subst(FILE) # interpolate variables e.g. '{HOME}'
+
         # the file argument may bring a path component. 
         # It is handled separately from PATH as it updates self.lastFile, not self.lastPath
+        
         altPath, altFilename = os.path.split(FILE)
-        if altPath and altPath.is_absolute():
+        self.log(altPath)
+        self.log(altFilename)
+        if altPath and Path(altPath).is_absolute():
             if PATH is not None:
                 self.G("RESPOND TYPE=error MSG='absolute path in FILE cannot be combined with PATH'")
                 return
-            canonicalFilePath = Path(os.path.join(PATH, FILE)).resolve()
+            canonicalFilePath = Path(FILE).resolve() # PATH is not used in this case: Given an absolute file path, the default path does not matter
         else:            
             # deferred default:
             if PATH is None:
@@ -124,10 +132,11 @@ class klipper_hotload:
         if CLEAR or self.myFunDict is None:
             self._initStorage()
 
+        # run command
         if not self._U_inner(canonicalFilePath, FUN, gcmd):
             return # error
         
-        # === update defaults on successful fun execution ===
+        # === SUCCESS: update defaults only on successful fun execution ===
         self.lastPath = PATH
         self.lastFile = FILE
         self.lastFun = FUN          
@@ -136,6 +145,10 @@ class klipper_hotload:
         self.gcode.run_script_from_command(cmd)
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.wait_moves()
+    
+    def log(self, txt):
+        # logging from this file's code (not user code!)
+        self.G("RESPOND TYPE=echo MSG='"+str(txt)+"'")
         
 # primary entry point for extension
 def load_config(config):

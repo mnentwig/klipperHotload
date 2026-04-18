@@ -56,13 +56,20 @@ calls `other_fun` and sets it as default.
 ```U FUN=fun3 FILE=someOtherFile.py PATH=/home/myself```
 calls `fun3` from `someOtherFile.py` located at `/home/myself` and updates defaults for `PATH`, `FILE`, `FUN`.
 
-### PATH and FILE variables
-`{HOME}` interpolates to the user's home directory, `CONFIG` to the directory holding printer.cfg, `{TEMP}` to the system temp directory, 
+### Installation
+- run klipperHotload/install.sh
+- add [klipper_hotload] to e.g. printer.cfg
+- Run `U` from the Klipper command line. The error message shows the default file location. Copy above example there into my_fun.py.
+
+# Reference
 
 ### PATH and FILE resolution
 `FILE` may optionally include an absolute or relative file component. It updates the default for `FILE` (not `PATH`). If absolute, `PATH` is disregarded. 
 A typical use case is setting `PATH` only once to a user folder, then relying on the `PATH` default and navigating subfolders with `FILE=/a/b/c/d.py`. 
 The intention behind the default mechanisms is to keep G-code concise in long lists of function calls that typically call functions from the same file or even the same function with changing arguments.
+
+### PATH and FILE variables
+`{HOME}` interpolates to the user's home directory, `CONFIG` to the directory holding printer.cfg, `{TEMP}` to the system temp directory, and `EXTRAS` to the install location of the python file (e.g. /home/someUser/klipper/klippy/extras)
 
 ### Storage
 A single dictionary is provided to all function calls for data storage, regardless of file. It persists across recompilation of user code. Restarting Klipper clears it. 
@@ -72,7 +79,5 @@ Storage can be reset with the ```CLEAR=1``` argument in combination with a funct
 
 The dictionary permits dot notation for dictionary access as shorthand.
 
-### Installation
-- run klipperHotload/install.sh
-- add [klipper_hotload] to e.g. printer.cfg
-- Run `U` from the Klipper command line. The error message shows the default file location. Copy above example there into my_fun.py.
+### Running tests
+Copy contents of `klipper/extras/klipper_hotload_demotest/demotest.gcode` into the Klipper console.
