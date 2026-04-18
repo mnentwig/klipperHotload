@@ -16,6 +16,12 @@ class klipper_hotload:
     def __init__(self, config):
         self.printer = config.get_printer()
         self.gcode = self.printer.lookup_object('gcode')
+
+        # === check presence of [respond] ===
+        # otherwise logging would fail
+        if len(config.get_prefix_sections("respond")) == 0:
+            raise RuntimeError("klipper_hotload requires [respond] to be enabled. Please add [respond] section to printer.cfg")
+        
         self.myFunDict = None # first argument given to user code calls
         self.codeNamespace = {} # user file compilation result, indexed by canonical path
         self.codeTimestamps = {} # user file change time, indexed by canonical path        
@@ -28,6 +34,7 @@ class klipper_hotload:
         self.constTEMP = tempfile.gettempdir()
         self.constEXTRAS = Path(__file__).resolve().parent # this file is supposed to be loaded from klipper/klippy/extras
 
+        # startup defaults (critical - some use cases may never touch the settings)
         self.lastFile = "my_fun.py"
         self.lastPath = self.constCONFIG
         self.lastFun = "my_fun"
@@ -35,7 +42,7 @@ class klipper_hotload:
         # We use the one-letter "U" macro for concise user code. It's not used in RS‑274 and friends (some CNC machines: secondary X axis)
         self.gcode.register_command(
             'U', self.cmd_U,
-            desc="Calls arbitrary user Python code. FUN=(my_fun: fct name) FILE=(my_fun.py: file name) PATH=(location of printer.cfg: file location) CLEAR=(0: resets state)"
+            desc="klipper_hotload: calls arbitrary user Python code. FUN=(my_fun: fct name) FILE=(my_fun.py: file name) PATH=(location of printer.cfg: file location) CLEAR=(0: resets state)"
         )
 
     def _initStorage(self):
@@ -43,14 +50,19 @@ class klipper_hotload:
         self.myFunDict.printer = self.printer
         self.myFunDict.gcode = self.gcode
         self.myFunDict.hello = self            
-        # closure on self to allow userDict.log() syntax
-        def log(txt):
-            self.log(txt) # closure captures "self"
-            #self.G("RESPOND TYPE=echo MSG='"+str(txt)+"'")
-        def logE(txt):
+        def log(txt): # closure captures "self"
+            self.log(txt)
+        def logRaw(txt): # closure captures "self"
+            self.logRaw(txt)
+        def logE(txt): # closure captures "self"
             self.G("RESPOND TYPE=error MSG='"+str(txt)+"'")
+        def G(txt, waitForCompletion=False): # closure captures "self"
+            self.G(txt, waitForCompletion)
+            
         self.myFunDict.log = log
+        self.myFunDict.logRaw = logRaw
         self.myFunDict.logE = logE        
+        self.myFunDict.G = G        
 
     def _U_inner(self, canonicalFilePath, FUN, gcmd):
         # === change detection ===
@@ -140,15 +152,21 @@ class klipper_hotload:
         self.lastPath = PATH
         self.lastFile = FILE
         self.lastFun = FUN          
-        
-    def G(self, cmd):
+    
+    def G(self, cmd, waitForCompletion=False):
+        '''shorthand for executing a GCODE command'''
         self.gcode.run_script_from_command(cmd)
-        toolhead = self.printer.lookup_object('toolhead')
-        toolhead.wait_moves()
+        if waitForCompletion:
+            toolhead = self.printer.lookup_object('toolhead')
+            toolhead.wait_moves()
     
     def log(self, txt):
-        # logging from this file's code (not user code!)
-        self.G("RESPOND TYPE=echo MSG='"+str(txt)+"'")
+        '''shorthand for info-logging to the console'''
+        self.gcode.respond_info(str(txt))
+
+    def logRaw(self, txt):
+        '''shorthand for info-logging to the console'''
+        self.gcode.respond_raw(str(txt))
         
 # primary entry point for extension
 def load_config(config):
