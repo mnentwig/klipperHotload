@@ -41,29 +41,36 @@ def otherFun(self, gcmd): # use FUN=otherFun
 ```gcode
 U
 ```
-uses the last user function, file, path that were specified. Defaults are `my_fun` in `my_fun.py`, located in the same directory as `printer.cfg`. 
+calls the last user function, file, path that were specified. Defaults are `my_fun` in `my_fun.py`, located in the same directory as `printer.cfg`. 
 This variant is attractive for quick-and-dirty use, also when only a single function exists (e.g. user code command dispatcher)
 
-Arguments are passed through:
+Arguments are passed through e.g.:
 ```gcode
 U FOOBAR=10
 ```
-Arguments are passed through. Reserved keywords: ```PATH```, ```FILE```, ```FUN```, ```CLEAR``` 
+Reserved keywords: ```PATH```, ```FILE```, ```FUN```, ```CLEAR``` 
 
+```U FUN=other_fun```
+calls `other_fun` and sets it as default.
 
-### Example (complete)
-This GCODE
-```U FUN=my_other_fun FILE=my_other_file PATH=```
-executes `my_fun` in `my_fun.py`, assumed to be in the same directory as `printer.cfg`.
+```U FUN=fun3 FILE=someOtherFile.py PATH=/home/myself```
+calls `fun3` from `someOtherFile.py` located at `/home/myself` and updates defaults for `PATH`, `FILE`, `FUN`.
 
 ### PATH and FILE variables
 `{HOME}` interpolates to the user's home directory, `CONFIG` to the directory holding printer.cfg, `{TEMP}` to the system temp directory, 
 
-
+### PATH and FILE resolution
+`FILE` may optionally include an absolute or relative file component. It updates the default for `FILE` (not `PATH`). 
+A typical use case is setting `PATH` only once to a user folder, then relying on the `PATH` default and navigating subfolders with `FILE=/a/b/c/d.py`. 
+The intention behind the default mechanisms is to keep G-code concise in long lists of function calls that typically call functions from the same file or even the same function with changing arguments.
 
 ### Storage
+A single dictionary is provided to all function calls for data storage, regardless of file. It persists across recompilation of user code. Restarting Klipper clears it. 
+User code is responsible for avoiding name clashes between functions e.g. by using uniquely named fields.
 
+Storage can be reset with the ```CLEAR=1``` argument in combination with a function call, which also forces recompilation of the function's source file (clearing e.g. global variables in the file's name space)
 
+The dictionary permits dot notation for dictionary access as shorthand.
 
 ### Installation
 - run klipperHotload/install.sh
