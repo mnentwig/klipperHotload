@@ -89,5 +89,19 @@ self.G("G0 X100 Y100") # GCODE (does not wait for completion)
 self.respCmd("action:prompt_begin Hello World"): # RESPOND with TYPE=command
 ```
 
+### Redirector macro
+The following macro example redirects a macro (this example: PRINT_START) to a function (example: of the same name). It will fail for string arguments that require quoting.
+```gcode
+[gcode_macro PRINT_START]
+gcode:
+    RESPOND MSG="params={params}"
+    {% set ns = namespace(cmd="U PATH={CONFIG} FILE=q.py FUN=PRINT_START") %}
+    {% for k, v in params.items() %}
+        {% set ns.cmd = ns.cmd + " " + k + "=" + v %}
+    {% endfor %}
+    RESPOND MSG="{ns.cmd}"
+    {ns.cmd}
+```
+
 ### Running tests
 Copy contents of `klipper/extras/klipper_hotload_demotest/demotest.gcode` into the Klipper console.
