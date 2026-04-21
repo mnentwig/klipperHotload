@@ -118,6 +118,14 @@ class klipper_hotload:
 
     def cmd_U(self, gcmd):        
         '''response to this package's GCODE 'U' command'''
+        myDebug = True
+        if myDebug:
+            # debug params logging
+            self.log("klipperHotload: U")
+            params = gcmd.get_command_parameters() # e.g. {'X': '30', 'ARG': '10'}
+            for k, v in params.items():
+                self.log(f"key='{k}' val='{v}'")
+
         FILE = gcmd.get("FILE", default=self.lastFile)
         PATH = gcmd.get("PATH", default=None) # deferred: self.lastPath
         FUN = gcmd.get("FUN", default=self.lastFun)
@@ -158,6 +166,8 @@ class klipper_hotload:
         self.lastFile = FILE
         assert FUN
         self.lastFun = FUN          
+        if myDebug:
+            self.log(f"klipperHotload: Updating defaults PATH={PATH} where None is allowed; FILE={FILE}; FUN={FUN}")
     
     def G(self, cmd, waitForCompletion=False):
         '''shorthand for executing a GCODE command'''

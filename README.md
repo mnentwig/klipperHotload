@@ -71,6 +71,11 @@ The intention behind the default mechanisms is to keep G-code concise in long li
 ### PATH and FILE variables
 `{HOME}` interpolates to the user's home directory, `CONFIG` to the directory holding printer.cfg, `{TEMP}` to the system temp directory, and `EXTRAS` to the install location of the python file (e.g. /home/someUser/klipper/klippy/extras)
 
+In Klipper GCODE, getting curly braces past Jinja2 takes some effort, e.g. pass `{CONFIG}` for interpolation by KlipperHotload as follows:
+```gcode
+ U FILE={ '{CONFIG}/q.py' } FUN=helloHead
+```
+
 ### Storage
 A single dictionary is provided to all function calls for data storage, regardless of file. It persists across recompilation of user code. Restarting Klipper clears it. 
 User code is responsible for avoiding name clashes between functions e.g. by using uniquely named fields (see `myOwnData` field in example).
