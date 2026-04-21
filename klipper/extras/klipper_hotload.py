@@ -152,8 +152,11 @@ class klipper_hotload:
             return # error
         
         # === SUCCESS: update defaults only on successful fun execution ===
-        self.lastPath = PATH
+        if PATH is not None:
+            self.lastPath = PATH
+        assert FILE
         self.lastFile = FILE
+        assert FUN
         self.lastFun = FUN          
     
     def G(self, cmd, waitForCompletion=False):
