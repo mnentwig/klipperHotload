@@ -15,7 +15,7 @@ def my_fun(self, gcmd):
 	# - self.log("the response is spam spam bacon eggs and spam")
 	# - self.logE("respond this as error")
 	# user data: Persistent until Klipper restart or explicit CLEAR=1
-	# self.myOwnData is shorthand for self["myOwnData"]
+	# self.myOwnData is shorthand for self["myOwnData"]. Note, "myOwnData" is an example key, arbitrary but unique to this function (or agreed between functions)
 	# Fields are visible to any other function call - use e.g. prefix to prevent name clash
     if not "myOwnData" in self:
         self.log("Startup - hello there!")
