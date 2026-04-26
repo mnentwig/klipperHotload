@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-import tempfile
+import tempfile, traceback
 
 # dictionary that uses dot for element access
 class attrDict(dict):
@@ -107,8 +107,17 @@ class klipper_hotload:
 
         try:
             self.codeNamespace[canonicalFilePath][FUN](self.myFunDict, gcmd)
-        except Exception as e:
+        except Exception as e:            
+            # Note: Not robust to arbitrary characters in message as it goes via literal GCODE
             self.G("RESPOND TYPE=error MSG='fun exec failed:"+str(e)+"'")
+            
+            a = []
+            for l in str(e).splitlines():
+                a.append(l)
+            a.extend(traceback.format_tb(e.__traceback__))
+            for l in a:
+                self.log(l) # Note: Robust, using Python API
+            
             return 0
         return 1 # success
     
