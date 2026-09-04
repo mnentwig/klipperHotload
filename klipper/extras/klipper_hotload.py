@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import tempfile, traceback
+import traceback
 
 # dictionary that uses dot for element access
 class attrDict(dict):
@@ -67,12 +68,15 @@ class klipper_hotload:
         self.myFunDict.G = G        
         self.myFunDict.respCmd = respCmd
 
+    def _errorPause(self, msg):
+        self.G(f"RESPOND TYPE=error MSG='{msg}'")
+
     def _U_inner(self, canonicalFilePath, FUN, gcmd):
         # === change detection ===
         try:
             timestamp = os.path.getmtime(canonicalFilePath)
         except Exception as e:
-            self.G("RESPOND TYPE=error MSG='python file "+str(canonicalFilePath)+" not accessible: "+str(e)+"'")
+            self._errorPause(f"python file {canonicalFilePath} is not accessible: {e}")
             return 0
             
         if not canonicalFilePath in self.codeTimestamps or not canonicalFilePath in self.codeNamespace or self.codeTimestamps[canonicalFilePath] != timestamp:
@@ -81,14 +85,14 @@ class klipper_hotload:
             try:
                 source = open(canonicalFilePath).read()
             except Exception as e:
-                self.G("RESPOND TYPE=error MSG='reading python file "+str(canonicalFilePath)+" failed:"+str(e)+"'")
+                self._errorPause(f"reading python file {canonicalFilePath} failed: {e}")
                 return 0
 
             # - compile
             try:
                 code = compile(source, canonicalFilePath, "exec")
             except Exception as e:
-                self.G("RESPOND TYPE=error MSG='compiling python file "+str(canonicalFilePath)+" failed:"+str(e)+"'")
+                self._errorPause(f"compiling python file {canonicalFilePath} failed: {e}")
                 return 0
 
             # - run file
@@ -96,20 +100,22 @@ class klipper_hotload:
             try:
                 exec(code, newNs)
             except Exception as e:
-                self.G("RESPOND TYPE=error MSG='running python file "+str(canonicalFilePath)+" failed:"+str(e)+"'")
+                tb = traceback.extract_tb(__import__('sys').exc_info()[2])
+                lineno = tb[-1].lineno
+                self._errorPause(f"running python file {canonicalFilePath} failed (line {lineno}): {e}")
                 return 0
             self.codeNamespace[canonicalFilePath] = newNs
 
         # === call function ===
         if not FUN in self.codeNamespace[canonicalFilePath]:
-            self.G("RESPOND TYPE=error MSG='python file "+str(canonicalFilePath)+" does not provide function "+FUN+"'")
+            self._errorPause(f"python file {canonicalFilePath} does not provide function {FUN}")
             return 0
 
         try:
             self.codeNamespace[canonicalFilePath][FUN](self.myFunDict, gcmd)
         except Exception as e:            
             # Note: Not robust to arbitrary characters in message as it goes via literal GCODE
-            self.G("RESPOND TYPE=error MSG='fun exec failed:"+str(e)+"'")
+            self._errorPause(f"function exec {FUN} from {canonicalFilePath} failed: {e}")
             
             a = []
             for l in str(e).splitlines():
